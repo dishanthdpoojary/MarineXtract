@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarineXtract</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark">M</div>
+          <div>
+            <p class="eyebrow">Deep Learning Marine Intelligence</p>
+            <h1>MarineXtract</h1>
+          </div>
+        </div>
+        <div class="status-pill">Sea algae species identification</div>
+      </header>
+
+      <main class="hero-grid">
+        <section class="panel upload-panel">
+          <div class="panel-header">
+            <span class="badge">Upload Image</span>
+            <h2>Analyze algae sample</h2>
+          </div>
+
+          <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+            <label class="upload-box" for="imageUpload">
+              <input id="imageUpload" type="file" name="image" accept="image/*" />
+              <span class="upload-icon">⬆</span>
+              <strong>Drop algae image here</strong>
+              <small>or click to browse</small>
+            </label>
+
+            <button type="submit" class="primary-btn">Predict species</button>
+          </form>
+
+          <div class="preview-wrap hidden" id="previewWrap">
+            <img id="previewImage" alt="Selected algae preview" />
+          </div>
+        </section>
+
+        <section class="panel result-panel">
+          <div class="panel-header">
+            <span class="badge accent">Result</span>
+            <h2>Commercial insight</h2>
+          </div>
+
+          <div id="resultState" class="result-empty">
+            <div class="empty-icon">🌊</div>
+            <p>Upload an image to detect the alga species and estimate its commercial value.</p>
+          </div>
+
+          <div id="resultCard" class="result-card hidden">
+            <div class="result-topline">
+              <div>
+                <p class="label">Predicted species</p>
+                <h3 id="speciesName">-</h3>
+              </div>
+              <div class="confidence-bubble">
+                <span>Confidence</span>
+                <strong id="confidenceValue">0%</strong>
+              </div>
+            </div>
+
+            <div class="info-grid">
+              <div class="info-box">
+                <p class="label">Common name</p>
+                <strong id="commonName">-</strong>
+              </div>
+              <div class="info-box highlight">
+                <p class="label">Commercial value</p>
+                <strong id="commercialValue">₹0 / kg</strong>
+              </div>
+            </div>
+
+            <div class="info-box wide">
+              <p class="label">Commercial uses</p>
+              <ul id="commercialUses" class="uses-list"></ul>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
