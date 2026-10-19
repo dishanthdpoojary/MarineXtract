@@ -16,7 +16,7 @@ def index():
 
 @app.route("/api/health")
 def health_check():
-    return jsonify({"status": "ok", "model": "MarineXtract EfficientNetV2-S"})
+    return jsonify({"status": "ok", "model": "MarineXtract ResNet-101"})
 
 
 @app.route("/api/predict", methods=["POST"])
