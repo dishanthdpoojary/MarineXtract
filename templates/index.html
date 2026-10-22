@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>MarineXtract</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -10,53 +11,65 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   </head>
   <body>
+    <a class="skip-link" href="#mainContent">Skip to analysis</a>
     <div class="page-shell">
       <header class="topbar">
         <div class="brand-wrap">
-          <div class="brand-mark">M</div>
+          <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M5 24V8l11 12L27 8v16" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg></div>
           <div>
-            <p class="eyebrow">Deep Learning Marine Intelligence</p>
-            <h1>MarineXtract</h1>
+            <p class="brand-name">MarineXtract</p>
+            <p class="brand-caption">Marine intelligence workspace</p>
           </div>
         </div>
-        <div class="status-pill">Sea algae species identification</div>
+        <form method="post" action="{{ url_for('logout') }}" class="account-actions">
+          <span class="status-pill"><span class="account-dot" aria-hidden="true"></span>{{ session['username'] }}</span>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="logout-btn">Sign out</button>
+        </form>
       </header>
 
-      <main class="hero-grid">
-        <section class="panel upload-panel">
+      <main id="mainContent">
+        <div class="workspace-heading">
+          <div><p class="eyebrow">WORKSPACE / SPECIES IDENTIFICATION</p><h1>Algae analysis</h1><p>Identify your sample and explore its commercial potential.</p></div>
+          <span class="workspace-detail">Image-based classification</span>
+        </div>
+        <div class="hero-grid">
+        <section class="panel upload-panel" aria-labelledby="uploadTitle">
           <div class="panel-header">
-            <span class="badge">Upload Image</span>
-            <h2>Analyze algae sample</h2>
+            <span class="step-number" aria-hidden="true">01</span>
+            <div><h2 id="uploadTitle">Upload your sample</h2><p>Choose a clear, close-up image of the algae.</p></div>
           </div>
 
           <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
             <label class="upload-box" for="imageUpload">
-              <input id="imageUpload" type="file" name="image" accept="image/*" />
-              <span class="upload-icon">⬆</span>
-              <strong>Drop algae image here</strong>
-              <small>or click to browse</small>
+              <input id="imageUpload" type="file" name="image" accept="image/jpeg,image/png,image/webp" aria-label="Upload algae sample" aria-describedby="fileHelp" />
+              <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m-4 4 4-4 4 4M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <strong>Drag and drop your image</strong>
+              <small>or <span class="browse-text">browse files</span></small>
+              <span id="fileHelp" class="file-help">JPG, PNG or WebP</span>
             </label>
 
-            <button type="submit" class="primary-btn">Predict species</button>
+            <div class="preview-wrap hidden" id="previewWrap"><img id="previewImage" alt="Selected algae sample" /><p id="fileName"></p></div>
+            <p id="uploadFeedback" class="upload-feedback hidden" role="alert"></p>
+            <button type="submit" class="primary-btn" id="predictButton" disabled><span class="button-spinner" aria-hidden="true"></span><span id="predictLabel">Analyze sample</span><span class="button-arrow" aria-hidden="true">→</span></button>
+            <p class="upload-note">For best results, use a well-lit image with one algae sample in focus.</p>
           </form>
 
-          <div class="preview-wrap hidden" id="previewWrap">
-            <img id="previewImage" alt="Selected algae preview" />
-          </div>
         </section>
 
-        <section class="panel result-panel">
+        <section class="panel result-panel" aria-labelledby="resultTitle" aria-busy="false">
           <div class="panel-header">
-            <span class="badge accent">Result</span>
-            <h2>Commercial insight</h2>
+            <span class="step-number" aria-hidden="true">02</span>
+            <div><h2 id="resultTitle">Analysis results</h2><p>Species identification and commercial insights.</p></div>
           </div>
 
-          <div id="resultState" class="result-empty">
-            <div class="empty-icon">🌊</div>
-            <p>Upload an image to detect the alga species and estimate its commercial value.</p>
+          <div id="resultState" class="result-empty" role="status" aria-live="polite">
+            <div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M10 4H6a2 2 0 0 0-2 2v4m18-6h4a2 2 0 0 1 2 2v4M4 22v4a2 2 0 0 0 2 2h4m12 0h4a2 2 0 0 0 2-2v-4M16 23V10m0 8c-5 0-7-3-7-6 5 0 7 3 7 6Zm0-4c5 0 7-3 7-6-5 0-7 3-7 6Z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <h3 id="stateTitle">Ready when you are</h3>
+            <p id="stateMessage">Upload a sample and select Analyze sample to view its predicted species, confidence and estimated value.</p>
           </div>
 
-          <div id="resultCard" class="result-card hidden">
+          <div id="resultCard" class="result-card hidden" role="status" aria-live="polite">
             <div class="result-topline">
               <div>
                 <p class="label">Predicted species</p>
@@ -74,7 +87,7 @@
                 <strong id="commonName">-</strong>
               </div>
               <div class="info-box highlight">
-                <p class="label">Commercial value</p>
+                <p class="label">Estimated value</p>
                 <strong id="commercialValue">₹0 / kg</strong>
               </div>
             </div>
@@ -83,8 +96,11 @@
               <p class="label">Commercial uses</p>
               <ul id="commercialUses" class="uses-list"></ul>
             </div>
+            <p class="result-note">Predictions cover seven configured algae classes. Confidence reflects the model output; commercial values are indicative estimates.</p>
           </div>
         </section>
+        </div>
+        <footer class="workspace-footer"><span>MarineXtract</span><span>Species identification · Commercial insights</span></footer>
       </main>
     </div>
 

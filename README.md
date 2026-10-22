@@ -73,11 +73,31 @@ pip install -r requirements.txt
 
 ## Running the application
 
+Configure the workspace account in the same PowerShell session before starting:
+
+```powershell
+$env:MARINEXTRACT_USERNAME = "admin"
+$env:MARINEXTRACT_PASSWORD = "choose-a-strong-password"
+$env:MARINEXTRACT_SECRET_KEY = (python -c "import secrets; print(secrets.token_hex(32))")
+python app.py
+```
+
+Keep the secret key stable across application processes and restarts if sessions
+should remain valid. For other shells, set the same environment variables using
+the shell's environment-variable syntax. There is no built-in password; sign-in
+is disabled until `MARINEXTRACT_PASSWORD` is set. The username defaults to `admin`.
+This is a single shared workspace account; registration and password recovery
+are not included. Set `MARINEXTRACT_COOKIE_SECURE=1` when serving over HTTPS.
+
+After configuring the environment, subsequent starts use:
+
 ```bash
 python app.py
 ```
 
-The development server listens on `http://localhost:5000`. Open that URL in a browser, select an algae image, and choose **Predict species**.
+The development server listens on `http://localhost:5000`. Open that URL, sign in,
+select an algae image, and choose **Predict species**. Sessions expire after eight
+hours. Use **Sign out** to end a session.
 
 The application loads the model during startup. Ensure the checkpoint remains at the repository root with the exact filename `marinextract_efficientnetv2.pth`.
 
@@ -107,6 +127,11 @@ Content-Type: multipart/form-data
 
 The uploaded image must use the form field name `image`.
 
+Prediction and species endpoints require a signed-in session. Prediction POSTs
+also require the CSRF token from the analysis page's `csrf-token` meta tag in the
+`X-CSRF-Token` header. The curl example below illustrates only the upload format;
+an authenticated client must additionally send its session cookie and CSRF token.
+
 ```bash
 curl -X POST -F "image=@path/to/algae.jpg" http://localhost:5000/api/predict
 ```
@@ -130,5 +155,6 @@ Commercial values are static metadata configured in `backend/metadata.py`; they 
 ## Development notes
 
 - The current entry point enables Flask debug mode. Disable debug mode and use a production WSGI server before deploying publicly.
-- No automated test suite is currently included in the repository.
+- Run authentication tests with `python -m unittest discover -s tests -v`.
+  These checks mock the model loader and do not validate model inference.
 - The model checkpoint is required for startup and inference.

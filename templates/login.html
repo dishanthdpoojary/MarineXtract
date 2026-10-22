@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in · MarineXtract</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="ocean-story" aria-labelledby="storyTitle">
+        <a class="login-brand" href="{{ url_for('login') }}" aria-label="MarineXtract home">
+          <span class="marine-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M5 24V8l11 12L27 8v16" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg></span>
+          <span>MarineXtract</span>
+        </a>
+        <div class="story-copy">
+          <p class="story-kicker">MARINE SPECIES ANALYSIS</p>
+          <h1 id="storyTitle">Clarity in every<br />classification.</h1>
+          <p>A dedicated workspace for algae identification and commercial insights, powered by image analysis.</p>
+          <div class="platform-features">
+            <div class="platform-feature"><span aria-hidden="true">01</span><div><h2>Identify species</h2><p>Classify your sample across seven algae classes.</p></div></div>
+            <div class="platform-feature"><span aria-hidden="true">02</span><div><h2>Understand its potential</h2><p>Explore estimated value and commercial applications.</p></div></div>
+          </div>
+        </div>
+        <p class="brand-footer">MarineXtract <span>Marine intelligence workspace</span></p>
+      </section>
+      <section class="signin-panel" aria-labelledby="signinTitle">
+        <div class="signin-content">
+          <div class="signin-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <h2 id="signinTitle">Sign in to your workspace</h2>
+          <p class="signin-intro">Enter your credentials to continue to MarineXtract.</p>
+          {% if error %}
+          <div class="login-notice" role="alert">{{ error }}</div>
+          {% elif not configured %}
+          <div class="login-notice" role="status">Your workspace is almost ready. Ask your project administrator to configure sign-in credentials.</div>
+          {% endif %}
+          <form method="post" action="{{ url_for('login') }}" class="signin-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="field-group">
+              <label for="username">Username</label>
+              <input id="username" name="username" type="text" placeholder="Enter your username" autocomplete="username" required maxlength="150" value="{{ request.form.get('username', '') }}" autofocus />
+            </div>
+            <div class="field-group">
+              <label for="password">Password</label>
+              <div class="password-field">
+                <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required />
+                <button type="button" id="togglePassword" class="password-toggle" aria-label="Show password" aria-pressed="false">Show</button>
+              </div>
+            </div>
+            <p class="session-note">Your session stays active for up to 8 hours.</p>
+            <button type="submit" class="signin-submit" {% if not configured %}disabled{% endif %}>Sign in <span aria-hidden="true">→</span></button>
+          </form>
+          <p class="access-note">Need access? Contact your project administrator.</p>
+        </div>
+      </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+  </body>
+</html>
