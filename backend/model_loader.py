@@ -9,16 +9,14 @@ from torchvision import models, transforms
 from backend.metadata import SPECIES_CLASSES, SPECIES_INDEX
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-DEFAULT_MODEL_PATH = os.path.join(BASE_DIR, "marinextract_resnet101.pth")
-FALLBACK_MODEL_PATH = os.path.join(BASE_DIR, "marinextract_resnet.pth")
-MODEL_PATH = DEFAULT_MODEL_PATH if os.path.exists(DEFAULT_MODEL_PATH) else FALLBACK_MODEL_PATH
+MODEL_PATH = os.path.join(BASE_DIR, "marinextract_efficientnetv2.pth")
 
 
 def build_model(num_classes: int = 7) -> nn.Module:
-    model = models.resnet101(weights=None)
-    model.fc = nn.Sequential(
+    model = models.efficientnet_v2_s(weights=None)
+    model.classifier = nn.Sequential(
         nn.Dropout(p=0.2),
-        nn.Linear(2048, 256),
+        nn.Linear(1280, 256),
         nn.ReLU(inplace=True),
         nn.Dropout(p=0.2),
         nn.Linear(256, num_classes),
@@ -31,19 +29,13 @@ class MarineXtractModel:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = build_model(len(SPECIES_CLASSES))
         checkpoint = torch.load(model_path, map_location=self.device)
-        if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
-            state_dict = checkpoint["state_dict"]
-        elif isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
-            state_dict = checkpoint["model_state_dict"]
-        else:
-            state_dict = checkpoint
-        self.model.load_state_dict(state_dict, strict=True)
+        self.model.load_state_dict(checkpoint, strict=True)
         self.model.to(self.device)
         self.model.eval()
 
         self.transform = transforms.Compose(
             [
-                transforms.Resize((224, 224)),
+                transforms.Resize((384, 384)),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406],
