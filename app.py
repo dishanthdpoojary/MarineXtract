@@ -5,20 +5,26 @@ from datetime import timedelta
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from PIL import Image
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
 
-from backend.model_loader import model_service
+from backend.auth_config import load_login_config
+
+# Direct starts guide the owner through setup once, before loading the model.
+if __name__ == "__main__" and not load_login_config()["LOGIN_PASSWORD_HASH"]:
+    from setup_login import configure_login
+
+    try:
+        configure_login()
+    except (EOFError, KeyboardInterrupt):
+        raise SystemExit("Run python setup_login.py in an interactive terminal to configure sign-in.")
 
 app = Flask(__name__)
+app.config.update(load_login_config())
 app.config.update(
-    SECRET_KEY=os.environ.get("MARINEXTRACT_SECRET_KEY") or secrets.token_hex(32),
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("MARINEXTRACT_COOKIE_SECURE") == "1",
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
-    LOGIN_USERNAME=os.environ.get("MARINEXTRACT_USERNAME", "admin"),
-    LOGIN_PASSWORD_HASH=generate_password_hash(os.environ["MARINEXTRACT_PASSWORD"])
-    if os.environ.get("MARINEXTRACT_PASSWORD") else None,
 )
 
 
@@ -106,6 +112,10 @@ def predict():
 
     try:
         image = Image.open(io.BytesIO(file.read())).convert("RGB")
+        # Keep page rendering independent of PyTorch startup and checkpoint loading.
+        # Python caches the imported service for subsequent predictions.
+        from backend.model_loader import model_service
+
         result = model_service.predict(image)
         return jsonify(result)
     except Exception as exc:  # pragma: no cover - defensive for UI errors
@@ -120,4 +130,8 @@ def species_metadata():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(
+        host="0.0.0.0", port=5000,
+        debug=os.environ.get("MARINEXTRACT_DEBUG") == "1",
+        use_reloader=False,
+    )

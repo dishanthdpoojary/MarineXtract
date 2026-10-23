@@ -73,6 +73,23 @@ pip install -r requirements.txt
 
 ## Running the application
 
+For local use, simply run:
+
+```powershell
+python app.py
+```
+
+If sign-in has not been configured, the terminal prompts for a username and a
+password (at least 12 characters) before starting the server. Password characters
+are hidden while typing. The password hash and a stable session secret are saved
+in `instance/login.json`, which is excluded from Git. Subsequent starts reuse
+these settings, including when you start from a different terminal.
+
+To configure or reset the local login separately, run `python setup_login.py`,
+then restart the server and refresh the browser. Resetting rotates the session
+secret and signs out existing local sessions. Keep `instance/` private.
+
+For deployment, environment variables can override the saved local account.
 Configure the workspace account in the same PowerShell session before starting:
 
 ```powershell
@@ -85,7 +102,8 @@ python app.py
 Keep the secret key stable across application processes and restarts if sessions
 should remain valid. For other shells, set the same environment variables using
 the shell's environment-variable syntax. There is no built-in password; sign-in
-is disabled until `MARINEXTRACT_PASSWORD` is set. The username defaults to `admin`.
+is disabled until a local login is saved or `MARINEXTRACT_PASSWORD` is set.
+The username defaults to `admin`.
 This is a single shared workspace account; registration and password recovery
 are not included. Set `MARINEXTRACT_COOKIE_SECURE=1` when serving over HTTPS.
 
@@ -99,7 +117,11 @@ The development server listens on `http://localhost:5000`. Open that URL, sign i
 select an algae image, and choose **Predict species**. Sessions expire after eight
 hours. Use **Sign out** to end a session.
 
-The application loads the model during startup. Ensure the checkpoint remains at the repository root with the exact filename `marinextract_efficientnetv2.pth`.
+The application loads the model on the first prediction and reuses it for later
+requests. The login and analysis pages can load without waiting for PyTorch or
+the checkpoint. The first prediction may take longer while the model initializes.
+Keep the checkpoint at the repository root with the exact filename
+`marinextract_efficientnetv2.pth`.
 
 ## API
 
@@ -154,7 +176,9 @@ Commercial values are static metadata configured in `backend/metadata.py`; they 
 
 ## Development notes
 
-- The current entry point enables Flask debug mode. Disable debug mode and use a production WSGI server before deploying publicly.
+- Debug mode is off by default and the automatic reloader is disabled. Set
+  `MARINEXTRACT_DEBUG=1` only for local debugging. Use a production WSGI server
+  before deploying publicly.
 - Run authentication tests with `python -m unittest discover -s tests -v`.
   These checks mock the model loader and do not validate model inference.
 - The model checkpoint is required for startup and inference.
